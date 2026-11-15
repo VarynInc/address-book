@@ -1,13 +1,43 @@
-import { contactKey, mergeContact } from './import-contacts.js';
+import { mergeContact } from './import-contacts.js';
+
+function normalizedName(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function nameKey(contact) {
+  const last = normalizedName(contact.name?.last);
+  if (last) return `last:${last}`;
+  const first = normalizedName(contact.name?.first);
+  if (first) return `first:${first}`;
+  const company = normalizedName(contact.business?.company);
+  return company ? `company:${company}` : '';
+}
+
+function duplicateContactKey(contact) {
+  const address = String(contact.address || '').trim();
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return `email:${address.toLowerCase()}`;
+
+  const type = String(contact.type || '').toLowerCase();
+  if (!/^(phone\d*|mobile|cell|telephone|tel|work|home|fax)$/.test(type)) return '';
+  let digits = address.replace(/\D/g, '');
+  if (digits.startsWith('1')) digits = digits.slice(1);
+  return digits ? `phone:${digits}` : '';
+}
 
 export function findDuplicateGroups(contacts) {
   const groups = [];
   const visited = new Set();
   const matches = (first, second) => {
-    const last = String(first.name?.last || '').trim().toLowerCase();
-    if (!last || last !== String(second.name?.last || '').trim().toLowerCase()) return false;
-    const keys = new Set((first.contacts || []).map(contactKey).filter(Boolean));
-    return (second.contacts || []).some((contact) => keys.has(contactKey(contact)));
+    const firstName = normalizedName(first.name?.first);
+    const lastName = normalizedName(first.name?.last);
+    if (firstName && lastName
+      && firstName === normalizedName(second.name?.first)
+      && lastName === normalizedName(second.name?.last)) return true;
+
+    const firstIdentityKey = nameKey(first);
+    if (!firstIdentityKey || firstIdentityKey !== nameKey(second)) return false;
+    const keys = new Set((first.contacts || []).map(duplicateContactKey).filter(Boolean));
+    return (second.contacts || []).some((contact) => keys.has(duplicateContactKey(contact)));
   };
   for (const contact of contacts) {
     if (visited.has(contact.id)) continue;

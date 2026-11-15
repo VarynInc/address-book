@@ -59,6 +59,12 @@ Settings include the following UI controls:
 
 Add to the Settings screen a new Identify Duplicates section. Identify duplicates: find duplicate address book entries based on last name and telephone number or email address. When clicked, present a new screen that displays all address book entries that may be duplicates based on the last name matching another address book entry and one of the telephone number or email address also match the same address book entry. The duplicate entries can be merged or deleted. Merge means the user selects one entry to keep and then combine all non-empty properties into the users selected entry and delete the unselected entries. Delete means the user selects one entry to keep and the other matching entries are deleted.
 
+The following scenarios are checked to identify a duplicate contact:
+- last names are equal and either a telephone number or an email address are equal. If last name is empty then compare first name. If last name and first name are empty then compare company name.
+- first name and last name are both equal, and ignore telephone, email, and company name.
+- when comparing first name, last name, company name, and email address perform a case-insensitive compare.
+- when comparing telephone numbers, ignore all non-numeric characters (remove "+()-. "), and if the number begins with either "+1" or "1" then ignore that.
+
 Persist the users settings. Save the user settings in a localstorage JSON object and restore the user settings when the app launches.
 
 ## Import / export

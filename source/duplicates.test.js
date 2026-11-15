@@ -14,6 +14,29 @@ test('requires last name plus email or phone and groups linked matches', () => {
   assert.equal(findDuplicateGroups(entries.map(entry => ({ ...entry, name: { last: '' } }))).length, 0);
 });
 
+test('matches case-insensitive name fallbacks and normalizes telephone numbers', () => {
+  const contacts = [
+    { id: 'first', name: { first: 'Jamie' }, contacts: [{ type: 'phone', address: '+1 (909) 555-1234' }] },
+    { id: 'second', name: { first: 'jamie' }, contacts: [{ type: 'mobile', address: '1.909.555.1234' }] },
+    { id: 'company', name: {}, business: { company: 'Acme Labs' }, contacts: [{ type: 'email', address: 'Sales@Example.com' }] },
+    { id: 'company-copy', name: {}, business: { company: 'acme labs' }, contacts: [{ type: 'email', address: 'sales@example.com' }] },
+  ];
+
+  assert.deepEqual(findDuplicateGroups(contacts).map(group => group.map(entry => entry.id)), [
+    ['first', 'second'],
+    ['company', 'company-copy'],
+  ]);
+});
+
+test('matches equal first and last names without requiring matching contact details', () => {
+  const contacts = [
+    { id: 'first', name: { first: 'Jamie', last: 'Smith' }, business: { company: 'North' }, contacts: [{ type: 'email', address: 'one@example.com' }] },
+    { id: 'second', name: { first: 'jamie', last: 'SMITH' }, business: { company: 'South' }, contacts: [{ type: 'email', address: 'two@example.com' }] },
+  ];
+
+  assert.deepEqual(findDuplicateGroups(contacts).map(group => group.map(entry => entry.id)), [['first', 'second']]);
+});
+
 test('merge preserves chosen identity and conflicts while combining nonempty data', () => {
   const result = resolveDuplicateGroup(entries, ['one', 'two', 'three'], 'one', true);
   assert.equal(result.length, 2);

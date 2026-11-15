@@ -12,7 +12,8 @@
   "scripts": {
     "dev": "vite source",
     "build": "vite build source --outDir ../dist --emptyOutDir",
-    "preview": "vite preview source"
+    "preview": "vite preview source",
+    "test": "node --test source/*.test.js"
   },
   "dependencies": {
     "yaml": "^2.9.1"
