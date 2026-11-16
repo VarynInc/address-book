@@ -208,6 +208,7 @@ h1 { margin: 12px 0 3px; font-size: clamp(32px, 4vw, 46px); line-height: 1.15; f
 .duplicate-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding-top: 14px; }
 .duplicates-empty { color: var(--muted); font-size: 14px; }
 .settings-section { margin-top: 14px; padding: 0 24px; }
+.settings-footer { margin: 22px 0 0; color: #89948c; font-size: 10px; text-align: center; }
 .settings-row { min-height: 80px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid #edf0eb; }
 .settings-row select { width: 180px; min-height: 36px; padding: 0 10px; border: 1px solid #e0e6de; border-radius: 4px; color: #45554a; background: #fcfdfb; font-size: 11px; }
 .settings-data { margin-top: 20px; padding: 22px 24px; }

@@ -90,5 +90,8 @@ Export prompts the user for a file name. The file type will determined the file 
 
 ## to do
 
-- test import match
-- load and sync contacts with JSON file URL
+- each time a build is run with `npm run build`, increment version patch number in package.json `version`.
+- after a build is complete create or overwrite the file `./dist/build-info.json` file. This JSON file includes the packageName, version, the date of the build, and the git commit. Example:
+`{"packageName":"address-book","version":"1.0.0","publish_date":"2026-11-15T17:51:20.009Z","commit":"6fc2255"}`
+- test import match. Import is duplicating contacts.
+- load and sync contacts with JSON file from URL

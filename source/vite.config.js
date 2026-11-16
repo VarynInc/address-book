@@ -1,12 +1,17 @@
-import { copyFileSync, readdirSync } from 'node:fs';
+import { copyFileSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const packageMetadata = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 let faviconRoot;
 
 export default defineConfig({
   base: "/apps/contacts/",
+  define: {
+    __APP_VERSION__: JSON.stringify(packageMetadata.version),
+    __BUILD_YEAR__: JSON.stringify(new Date().getFullYear()),
+  },
   plugins: [{
     name: 'copy-favicons',
     apply: 'build',
