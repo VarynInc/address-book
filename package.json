@@ -2,7 +2,7 @@
   "name": "address-book",
   "description": "A web browser application to manage all your contacts in a simple modern UI built as a JavaScript browser application using modern JavaScript and ESM.",
   "private": false,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "Apache-2.0",
   "type": "module",
   "engines": {

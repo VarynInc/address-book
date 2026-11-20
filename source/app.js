@@ -201,6 +201,7 @@ let searchTerm = '';
 let selectedId = contacts[0]?.id || null;
 let expandedLetters = new Set();
 let editingId = null;
+let formReturnPage = 'contacts';
 let toastTimer;
 
 function serializeEntry(entry, includeId = false) {
@@ -361,6 +362,68 @@ function formPage() {
     <div class="form-actions"><button class="button button-quiet" type="button" data-action="cancel">Cancel</button><button class="button button-primary" type="submit">${editingId ? 'Save changes' : 'Add to address book'} ${icon('chevron')}</button></div></form></main>`;
 }
 
+function displayValue(value) {
+  if (value == null || value === '') return '';
+  return typeof value === 'object' ? JSON.stringify(value) : asString(value);
+}
+
+function displayField(label, value, options = {}) {
+  const text = displayValue(value);
+  if (!text) return '';
+  const rendered = options.action ? selectedContactMarkup({ type: options.type, address: text }) : escapeHtml(text);
+  return `<div class="display-field"><span>${escapeHtml(label)}</span><div class="display-value">${rendered}</div></div>`;
+}
+
+function displayAddressGroup(entry, locationType, address, fields) {
+  return `<div class="address-group"><div class="address-group-label">${locationType === 'business' ? 'BUSINESS / WORK' : 'HOME'}${address ? mapPinButton(entry, locationType, address) : ''}</div><div class="form-fields">${fields}</div></div>`;
+}
+
+function displayContactPage() {
+  const entry = contacts.find((item) => item.id === selectedId);
+  if (!entry) return contactsPage();
+  const nameFields = [
+    displayField('First name', entry.name.first),
+    displayField('Last name', entry.name.last),
+    displayField('Middle name', entry.name.middle),
+    displayField('Prefix', entry.name.prefix),
+    displayField('Suffix', entry.name.suffix),
+    displayField('Birthday', entry.name.dob ? formatBirthday(entry.name.dob) : ''),
+    displayField('Photo URL or email', entry.name.photo),
+    displayField('Categories', entry.category.join(', ')),
+  ].join('');
+  const contactFields = entry.contacts.filter((item) => item.address).map((item) => (
+    displayField(item.type, item.address, { action: true, type: item.type })
+  )).join('') || '<p class="display-empty">No contact details</p>';
+  const businessAddress = addressLine(entry.business);
+  const homeAddress = addressLine(entry.home);
+  const businessFields = [
+    displayField('Company', entry.business.company),
+    displayField('Street address', entry.business.street),
+    displayField('Suite / unit', entry.business.street2),
+    displayField('Location', entry.business.location),
+    displayField('City', entry.business.city),
+    displayField('State', entry.business.state),
+    displayField('ZIP', entry.business.zip),
+    displayField('Country', entry.business.country),
+  ].join('');
+  const homeFields = [
+    displayField('Street address', entry.home.street),
+    displayField('Apartment / unit', entry.home.street2),
+    displayField('City', entry.home.city),
+    displayField('State', entry.home.state),
+    displayField('ZIP', entry.home.zip),
+    displayField('Country', entry.home.country),
+  ].join('');
+  const additionalFields = Object.entries(entry.additional || {}).map(([key, value]) => displayField(key, value)).join('')
+    || '<p class="display-empty">No additional information</p>';
+  return `<main class="form-page"><div class="form-heading"><button class="back-link" data-action="back-contact">${icon('chevron')} Back to contacts</button><h1>${escapeHtml(displayName(entry))}</h1></div>
+    <div class="contact-form display-contact"><section class="form-section"><div class="form-section-title"><span>01</span><div><h2>The person</h2></div></div><div class="form-fields form-grid">${nameFields || '<p class="display-empty">No person details</p>'}</div></section>
+    <section class="form-section"><div class="form-section-title"><span>02</span><div><h2>Ways to reach them</h2><p>Email, phone, website, social media.</p></div></div><div class="form-fields form-grid">${contactFields}</div></section>
+    <section class="form-section"><div class="form-section-title"><span>03</span><div><h2>Where they are</h2><p>Work and/or home</p></div></div><div class="address-columns">${displayAddressGroup(entry, 'business', businessAddress, businessFields)}${displayAddressGroup(entry, 'home', homeAddress, homeFields)}</div><div class="notes-field"><span>Notes</span><div class="display-value">${entry.notes ? escapeHtml(entry.notes) : '<span class="display-empty">No notes</span>'}</div></div></section>
+    <section class="form-section"><div class="form-section-title"><span>04</span><div><h2>Additional information</h2></div></div><div class="form-fields form-grid">${additionalFields}</div></section>
+    <div class="form-actions"><button class="button button-primary" data-edit="${escapeHtml(entry.id)}">${icon('edit')} Edit contact</button></div></div></main>`;
+}
+
 function contactField(item) {
   return `<div class="contact-input-row"><select name="contactType" aria-label="Contact type"><option value="email" ${item.type === 'email' ? 'selected' : ''}>Email</option><option value="mobile" ${item.type === 'mobile' ? 'selected' : ''}>Mobile</option><option value="phone" ${item.type === 'phone' ? 'selected' : ''}>Phone</option><option value="work" ${item.type === 'work' ? 'selected' : ''}>Work</option><option value="website" ${item.type === 'website' ? 'selected' : ''}>Website</option><option value="other" ${!['email', 'mobile', 'phone', 'work', 'website'].includes(item.type) ? 'selected' : ''}>Other</option></select><input name="contactAddress" value="${escapeHtml(item.address)}" placeholder="Email address or phone number"><button class="remove-contact" type="button" data-action="remove-contact" aria-label="Remove contact detail">${icon('close')}</button></div>`;
 }
@@ -379,7 +442,7 @@ function importStrategyOptions() {
 }
 
 function render() {
-  const page = activePage === 'form' ? formPage() : activePage === 'settings' ? settingsPage() : activePage === 'duplicates' ? duplicatesPage() : activePage === 'map' ? mapPage() : contactsPage();
+  const page = activePage === 'form' ? formPage() : activePage === 'detail' ? displayContactPage() : activePage === 'settings' ? settingsPage() : activePage === 'duplicates' ? duplicatesPage() : activePage === 'map' ? mapPage() : contactsPage();
   document.querySelector('#app').innerHTML = `${header()}${page}${activePage === 'contacts' ? navigation() : ''}<div id="toast" class="toast" role="status" aria-live="polite"></div><dialog id="import-dialog" class="app-dialog"><form method="dialog"><button class="dialog-close icon-button" aria-label="Close">${icon('close')}</button></form><div class="eyebrow">BRING YOUR CONTACTS ALONG</div><h2>Import contacts</h2><p>Choose whether to add these contacts alongside your existing contacts or replace the address book.</p><div class="import-modes"><label><input type="radio" name="import-mode" value="replace"><span><strong>Replace address book</strong><small>Remove existing contacts before importing.</small></span></label><label><input type="radio" name="import-mode" value="merge" checked><span><strong>Add to address book</strong><small>Keep current contacts and add imported ones.</small></span></label></div><button class="button button-primary dialog-main-action" data-action="choose-import">Choose a file ${icon('chevron')}</button></dialog><dialog id="export-dialog" class="app-dialog"><form method="dialog"><button class="dialog-close icon-button" aria-label="Close">${icon('close')}</button></form><div class="eyebrow">TAKE YOUR DATA WITH YOU</div><h2>Export address book</h2><p>Download your contacts in a format you can keep or share.</p><label class="dialog-label">File name<input id="export-name" value="my-addresses" autocomplete="off"></label><div class="export-format" role="group" aria-label="Export format"><button data-export-format="json" class="is-active">JSON</button><button data-export-format="csv">CSV</button></div><button class="button button-primary dialog-main-action" data-action="download-export">Download file ${icon('download')}</button></dialog>`;
   if (activePage === 'settings') {
     document.querySelector('.settings-data')?.insertAdjacentHTML('beforebegin', `<section class="settings-section settings-data"><div class="settings-section-head"><h2>Identify Duplicates</h2></div><button class="data-action" data-page="duplicates"><span class="data-icon">${icon('search')}</span><span><strong>Identify duplicates</strong></span>${icon('chevron')}</button></section>`);
@@ -411,10 +474,13 @@ function showToast(message) {
 
 function selectContact(id) {
   selectedId = id;
+  activePage = 'detail';
   render();
+  window.scrollTo(0, 0);
 }
 
 function openForm(id = null) {
+  formReturnPage = activePage === 'detail' ? 'detail' : 'contacts';
   editingId = id;
   activePage = 'form';
   render();
@@ -481,7 +547,7 @@ function handleFormSubmit(event) {
   else contacts.push(entry);
   selectedId = entry.id;
   saveBook();
-  activePage = 'contacts';
+  activePage = wasEditing ? formReturnPage : 'contacts';
   editingId = null;
   render();
   showToast(wasEditing ? 'Contact updated.' : 'Contact added.');
@@ -753,7 +819,8 @@ function bindEvents() {
       render();
       document.querySelector('#search-input')?.focus();
     }
-    if (action === 'cancel') { activePage = 'contacts'; editingId = null; render(); }
+    if (action === 'cancel') { activePage = formReturnPage; editingId = null; render(); }
+    if (action === 'back-contact') { activePage = 'contacts'; editingId = null; render(); }
     if (action === 'import') document.querySelector('#import-dialog').showModal();
     if (action === 'choose-import') { event.preventDefault(); document.querySelector('#import-dialog').close(); document.querySelector('#import-file').click(); }
     if (action === 'export') document.querySelector('#export-dialog').showModal();
@@ -769,7 +836,7 @@ function bindEvents() {
       selectContact(element.dataset.cardId || element.dataset.rowId);
     });
     element.addEventListener('keydown', (event) => {
-      if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('button, select')) { event.preventDefault(); selectContact(element.dataset.cardId || element.dataset.rowId); }
+      if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('button, select, a, input')) { event.preventDefault(); selectContact(element.dataset.cardId || element.dataset.rowId); }
     });
   });
   document.querySelectorAll('[data-edit]').forEach((button) => button.addEventListener('click', () => openForm(button.dataset.edit)));
@@ -825,7 +892,8 @@ document.addEventListener('keydown', (event) => {
     render();
     document.querySelector('#search-input')?.focus();
   }
-  if (event.key === 'Escape' && activePage === 'form') { activePage = 'contacts'; editingId = null; render(); }
+  if (event.key === 'Escape' && activePage === 'detail') { activePage = 'contacts'; render(); }
+  if (event.key === 'Escape' && activePage === 'form') { activePage = formReturnPage; editingId = null; render(); }
 });
 
 render();

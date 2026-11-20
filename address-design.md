@@ -21,6 +21,8 @@ The main display shows the list of contacts in one of two possible views:
 - Tree view, left column is each alpha a-z. Expanding an alpha entry displays a table of addresses sorted by that alpha. Each entry one per line dislays address.category as an icon, address.name.photo, address.name.first, address.name.last, and a cell justified right with an edit button.
 - Card view, displays each address entry in a card view with top row address.category as an icon, address.name.photo, address.name.first, address.name.last; business or home address; address[i].contacts.type as a drop-list and address string or the drop-list current selection.
 
+When a person card or person row is clicked then show a display contact screen that displays all of the contact information available for that entry using the same layout as the address edit form.
+
 Other UI controls
 
 - View - button to toggle between tree view and card view.
@@ -41,6 +43,10 @@ The following screens can be navigated from the main screen.
 ### New and edit address screen
 
 Display an address entry form. With New, a blank form. With Edit, the form is populated with the data from the indicated address entry. Save and Cancel buttons.
+
+### Display contact screen
+
+Click a person card or row, or focus it and press Enter or Space, to view the contact without editing. The screen uses the edit form's person, contact methods, and address sections, and displays all saved contact methods, notes, and additional information. Back to contacts (or Escape) returns to the current list and filters; Edit contact opens the populated edit form. Embedded edit buttons, map pins, contact links, and contact-method dropdowns retain their own actions.
 
 ### Settings screen
 
@@ -90,7 +96,8 @@ Export prompts the user for a file name. The file type will determined the file 
 
 ## to do
 
+- Verify the dateLastUpdated timestamp in the JSON file tracks when the last change was made to contacts data. Any change to contact data updates this timestamp to the current date and time. Then update the Settings screen to display the dateLastUpdated and dateLastExport fields in the local date and time format.
 - after a build is complete create or overwrite the file `./dist/build-info.json` file. This JSON file includes the packageName, version, the date of the build, and the git commit. Example:
 `{"packageName":"address-book","version":"1.0.0","publish_date":"2026-11-15T17:51:20.009Z","commit":"6fc2255"}`
 - test import match. Import is duplicating contacts.
-- load and sync contacts with JSON file from URL
+- how to keep copies on different devices in sync? load and sync contacts with JSON file from URL, but the JSON file must be protected and encrypted so that only the owner can see the data.
